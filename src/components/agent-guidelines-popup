@@ -1,0 +1,142 @@
+"use client";
+
+import { useState } from "react";
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+
+export default function AgentGuidelinesPopup() {
+  const [role, setRole] = useState(`As the AI receptionist for **24x7 Direct**, you are the first point of contact for customers. You represent a friendly, lively, and resourceful personality that mirrors the innovative and approachable culture of the company.
+
+Your main objectives are:
+
+- Assist with queries and guide customers smoothly to their next steps.
+- Resolve customer issues efficiently and accurately.
+
+Your success lies in building trust, fostering engagement, and delivering seamless customer support.`);
+
+  const [background, setBackground] = useState(`Fill in with **24x7 Direct’s specific business information**:`);
+
+  const [personality, setPersonality] = useState(`You are the digital face of **24x7 Direct**, embodying:
+
+1. **Friendly and Warm**
+2. **Conversational and Relaxed**
+3. **Empathetic and Understanding**
+4. **Engaging and Curious**`);
+
+  const [responsibilities, setResponsibilities] = useState(`Your core tasks include:
+
+1. **Assist Customers** - Answer questions and provide helpful direction.
+2. **Guide Customer Actions** - Help complete tasks like bookings or updates.
+3. **Resolve Issues** - Provide empathetic, efficient solutions.
+4. **Escalate When Needed** - Know when to pass the query to a human.`);
+
+  const [dontKnow, setDontKnow] = useState(`If you don't know something:
+
+- Let the customer know you'll escalate the issue.
+- Collect: name, phone, and email.
+- Do not read the email back to them for privacy.
+- Reassure them that someone will follow up promptly.`);
+
+  const [scenarios, setScenarios] = useState(`**Unhappy Customer - LEARN Framework**:
+
+1. **Listen**: Let the customer speak.
+2. **Empathize**: Acknowledge their concern.
+3. **Apologize**: Even if it wasn’t your fault.
+4. **Respond**: Offer a resolution or next step.
+5. **Notify**: Let them know a human will follow up.
+
+---
+
+**Inappropriate Request**:
+
+1. **Stay Professional**
+2. **Set Boundaries**
+3. **Redirect the Conversation**
+4. **Escalate if Behavior Persists**`);
+
+useEffect(() => {
+  fetch("/api/guidelines")
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.role) setRole(data.role);
+      if (data.background) setBackground(data.background);
+      if (data.personality) setPersonality(data.personality);
+      if (data.responsibilities) setResponsibilities(data.responsibilities);
+      if (data.dontKnow) setDontKnow(data.dontKnow);
+      if (data.scenarios) setScenarios(data.scenarios);
+    })
+    .catch((err) => {
+      console.error("Failed to load guidelines:", err);
+    });
+}, []);
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline">Agent Guidelines</Button>
+      </DialogTrigger>
+
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto space-y-6">
+        <DialogHeader>
+          <DialogTitle>AI Agent Guidelines</DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            These instructions guide the AI agent’s personality, tone, and behavior in customer conversations.
+          </p>
+        </DialogHeader>
+
+        {[
+          { title: "Your Role", value: role, setter: setRole, rows: 7 },
+          { title: "Business Background", value: background, setter: setBackground, rows: 3 },
+          { title: "Personality Traits", value: personality, setter: setPersonality, rows: 8 },
+          { title: "Key Responsibilities", value: responsibilities, setter: setResponsibilities, rows: 8 },
+          { title: "If You Don’t Know Something", value: dontKnow, setter: setDontKnow, rows: 8 },
+          { title: "Scenario Handling", value: scenarios, setter: setScenarios, rows: 12 },
+        ].map(({ title, value, setter, rows }, idx) => (
+          <section key={idx}>
+            <h3 className="font-semibold mb-1">{title}</h3>
+            <textarea
+              rows={rows}
+              value={value}
+              onChange={(e) => setter(e.target.value)}
+              className="w-full rounded border border-gray-300 p-2 font-mono text-sm resize-y bg-white"
+            />
+          </section>
+        ))}
+
+        <DialogClose asChild>
+          <Button
+  variant="default"
+  className="mt-4"
+  onClick={() => {
+    fetch("/api/guidelines", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        role,
+        background,
+        personality,
+        responsibilities,
+        dontKnow,
+        scenarios,
+      }),
+    }).then(() => {
+      alert("Guidelines saved successfully.");
+    });
+  }}
+>
+  Save Guidelines
+</Button>
+
+        </DialogClose>
+      </DialogContent>
+    </Dialog>
+  );
+}

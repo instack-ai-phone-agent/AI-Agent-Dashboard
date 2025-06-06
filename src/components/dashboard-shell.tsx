@@ -7,20 +7,25 @@ import {
   LayoutDashboard,
   PhoneCall,
   Settings,
-  Bell,
-  Search,
   User,
   Bot,
+  Menu,
+  Users,
 } from "lucide-react";
-
+import { useState } from "react";
 import AgentsSelection from "@/components/agents-selection";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
-export default function DashboardShell({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
 
   const analyticsNav = [
     { label: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -37,18 +42,27 @@ export default function DashboardShell({
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="w-64 bg-black text-white p-4 space-y-6 flex flex-col relative">
-        <h2 className="text-xl font-bold">Instack AI</h2>
+      <aside className={cn(
+        "bg-black text-white p-4 space-y-6 flex flex-col transition-all duration-300 overflow-hidden",
+        collapsed ? "w-20" : "w-64"
+      )}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className={cn("text-xl font-bold", collapsed && "hidden")}>Instack AI</h2>
+          <button onClick={() => setCollapsed(!collapsed)} className="text-gray-400">
+            <Menu className="h-5 w-5" />
+          </button>
+        </div>
 
-        {/* Agents */}
+        {/* Agents Dropdown only */}
         <div className="space-y-2">
-          <h4 className="text-xs uppercase text-gray-400 tracking-wider px-3">Agents</h4>
-          <AgentsSelection />
+          {!collapsed && <h4 className="text-xs uppercase text-gray-400 tracking-wider px-3">Agents</h4>}
+          <AgentsSelection collapsed={collapsed} />
         </div>
 
         {/* Analytics */}
         <div className="space-y-2">
-          <h4 className="text-xs uppercase text-gray-400 tracking-wider px-3">Analytics</h4>
+          {!collapsed && <h4 className="text-xs uppercase text-gray-400 tracking-wider px-3">Analytics</h4>}
           {analyticsNav.map(({ label, href, icon: Icon }) => (
             <Link
               key={href}
@@ -59,14 +73,14 @@ export default function DashboardShell({
               )}
             >
               <Icon className="w-5 h-5" />
-              <span>{label}</span>
+              {!collapsed && <span>{label}</span>}
             </Link>
           ))}
         </div>
 
         {/* Agent AI Setup */}
         <div className="space-y-2">
-          <h4 className="text-xs uppercase text-gray-400 tracking-wider px-3">Agent AI Setup</h4>
+          {!collapsed && <h4 className="text-xs uppercase text-gray-400 tracking-wider px-3">Agent AI Setup</h4>}
           {setupNav.map(({ label, href, icon: Icon }) => (
             <Link
               key={href}
@@ -77,14 +91,14 @@ export default function DashboardShell({
               )}
             >
               <Icon className="w-5 h-5" />
-              <span>{label}</span>
+              {!collapsed && <span>{label}</span>}
             </Link>
           ))}
         </div>
 
         {/* Call History */}
         <div className="space-y-2">
-          <h4 className="text-xs uppercase text-gray-400 tracking-wider px-3">Calls</h4>
+          {!collapsed && <h4 className="text-xs uppercase text-gray-400 tracking-wider px-3">Calls</h4>}
           {callsNav.map(({ label, href, icon: Icon }) => (
             <Link
               key={href}
@@ -95,13 +109,30 @@ export default function DashboardShell({
               )}
             >
               <Icon className="w-5 h-5" />
-              <span>{label}</span>
+              {!collapsed && <span>{label}</span>}
             </Link>
           ))}
         </div>
 
-        {/* Settings at bottom */}
-        <div className="mt-auto pt-6 border-t border-gray-800">
+        {/* User + Settings at bottom */}
+        <div className="mt-auto pt-6 border-t border-gray-800 space-y-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="w-full text-left flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-800 transition">
+                <User className="w-5 h-5" />
+                {!collapsed && <span>Account</span>}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-white text-black ml-2">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>Billing</DropdownMenuItem>
+              <DropdownMenuItem>Team</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Log out</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Link
             href="/settings"
             className={cn(
@@ -110,33 +141,13 @@ export default function DashboardShell({
             )}
           >
             <Settings className="w-5 h-5" />
-            <span>Settings</span>
+            {!collapsed && <span>Settings</span>}
           </Link>
         </div>
       </aside>
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col">
-        {/* Top navbar */}
-        <header className="flex items-center justify-between px-6 py-4 border-b bg-white shadow-sm">
-          <div className="flex items-center gap-3">
-            <Search className="h-5 w-5 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="border border-gray-200 px-3 py-1 rounded-md text-sm w-64 focus:outline-none focus:ring focus:border-blue-300"
-            />
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Bell className="w-5 h-5 text-gray-600 cursor-pointer hover:text-black" />
-            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">
-              <User className="w-4 h-4 text-black" />
-            </div>
-          </div>
-        </header>
-
-        {/* Page content */}
         <main className="flex-1 p-6 bg-gray-100">{children}</main>
       </div>
     </div>

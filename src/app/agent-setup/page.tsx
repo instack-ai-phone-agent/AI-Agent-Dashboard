@@ -42,10 +42,15 @@ export default function AgentDesignPage() {
     <DashboardShell>
       {/* Page Title */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Agent Design</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Customize how your AI Agent sounds and handles conversations.
-        </p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Agent Design</h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Customize how your AI Agent sounds and handles conversations.
+            </p>
+          </div>
+          <Button variant="default">Test Your Agent</Button>
+        </div>
       </div>
 
       {/* Top Tabs + Guidelines Button */}
@@ -66,7 +71,7 @@ export default function AgentDesignPage() {
                 <div>
                   <CardTitle>Choose a Voice</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Set a voice that Phonely will use to answer the phone.
+                    Set a voice that your AI agent will use to answer the phone.
                   </p>
                 </div>
                 <Dialog>
@@ -122,7 +127,7 @@ export default function AgentDesignPage() {
                 </div>
                 <Dialog open={guidelinesOpen} onOpenChange={setGuidelinesOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" className="mt-2">Set Agent Guidelines</Button>
+                    <Button variant="outline" className="mt-2">Configure</Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-xl">
                     <DialogHeader>

@@ -122,7 +122,7 @@ export default function AgentsSelection({ collapsed }: { collapsed: boolean }) {
                 key={agent.id}
                 className="flex flex-col items-start gap-0.5 px-3 py-2 hover:bg-gray-100"
               >
-                <Link href={`/agents/${agent.id}`} className="w-full">
+                <Link href={`/agent-setup?id=${agent.id}`} className="w-full">
                   <span className="font-medium">{agent.name}</span>
                   {agent.phone_number && (
                     <span className="text-xs text-gray-500">{agent.phone_number}</span>

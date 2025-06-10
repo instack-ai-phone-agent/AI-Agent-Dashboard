@@ -1,14 +1,14 @@
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
-const agents = [
-  { id: "all", name: "All Agents" },
-  { id: "agent1", name: "Alice" },
-  { id: "agent2", name: "Bob" },
-];
+interface AgentFilterProps {
+  agents: { id: string; name: string }[];
+  value: string;
+  onChange: (value: string) => void;
+}
 
-export default function AgentFilter({ onChange }: { onChange: (value: string) => void }) {
+export default function AgentFilter({ agents, value, onChange }: AgentFilterProps) {
   return (
-    <Select defaultValue="all" onValueChange={onChange}>
+    <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="w-[200px]">
         <SelectValue placeholder="Select agent" />
       </SelectTrigger>

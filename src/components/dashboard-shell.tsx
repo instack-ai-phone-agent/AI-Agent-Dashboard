@@ -9,10 +9,9 @@ import {
   Settings,
   User,
   Bot,
-  Menu,
-  Users,
+  PanelLeft,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AgentsSelection from "@/components/agents-selection";
 import {
   DropdownMenu,
@@ -26,6 +25,23 @@ import {
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setCollapsed(false);
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setCollapsed(true);
+    }
+  }, [pathname]);
 
   const analyticsNav = [
     { label: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -42,27 +58,32 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className={cn(
-        "bg-black text-white p-4 space-y-6 flex flex-col transition-all duration-300 overflow-hidden",
-        collapsed ? "w-20" : "w-64"
-      )}
+      <aside
+        className={cn(
+          "bg-black text-white p-4 space-y-6 flex flex-col transition-all duration-300 overflow-hidden",
+          collapsed ? "w-20" : "w-64"
+        )}
       >
         <div className="flex items-center justify-between">
-          <h2 className={cn("text-xl font-bold", collapsed && "hidden")}>Instack AI</h2>
-          <button onClick={() => setCollapsed(!collapsed)} className="text-gray-400">
-            <Menu className="h-5 w-5" />
+          <div className="flex items-center gap-2">
+            <div className="bg-white w-6 h-6 rounded-sm" />
+            {!collapsed && <h2 className="text-xl font-bold md:text-lg">Instack AI</h2>}
+          </div>
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 w-10 hover:bg-transparent"
+          >
+            <PanelLeft className="stroke-white w-4 h-4" />
           </button>
         </div>
 
-        {/* Agents Dropdown only */}
         <div className="space-y-2">
-          {!collapsed && <h4 className="text-xs uppercase text-gray-400 tracking-wider px-3">Agents</h4>}
+          {!collapsed && <h4 className="text-xs uppercase text-gray-400 tracking-wider px-3 md:text-[10px]">Agents</h4>}
           <AgentsSelection collapsed={collapsed} />
         </div>
 
-        {/* Analytics */}
         <div className="space-y-2">
-          {!collapsed && <h4 className="text-xs uppercase text-gray-400 tracking-wider px-3">Analytics</h4>}
+          {!collapsed && <h4 className="text-xs uppercase text-gray-400 tracking-wider px-3 md:text-[10px]">Analytics</h4>}
           {analyticsNav.map(({ label, href, icon: Icon }) => (
             <Link
               key={href}
@@ -73,14 +94,13 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               )}
             >
               <Icon className="w-5 h-5" />
-              {!collapsed && <span>{label}</span>}
+              {!collapsed && <span className="md:text-sm text-[13px]">{label}</span>}
             </Link>
           ))}
         </div>
 
-        {/* Agent AI Setup */}
         <div className="space-y-2">
-          {!collapsed && <h4 className="text-xs uppercase text-gray-400 tracking-wider px-3">Agent AI Setup</h4>}
+          {!collapsed && <h4 className="text-xs uppercase text-gray-400 tracking-wider px-3 md:text-[10px]">Agent AI Setup</h4>}
           {setupNav.map(({ label, href, icon: Icon }) => (
             <Link
               key={href}
@@ -91,14 +111,13 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               )}
             >
               <Icon className="w-5 h-5" />
-              {!collapsed && <span>{label}</span>}
+              {!collapsed && <span className="md:text-sm text-[13px]">{label}</span>}
             </Link>
           ))}
         </div>
 
-        {/* Call History */}
         <div className="space-y-2">
-          {!collapsed && <h4 className="text-xs uppercase text-gray-400 tracking-wider px-3">Calls</h4>}
+          {!collapsed && <h4 className="text-xs uppercase text-gray-400 tracking-wider px-3 md:text-[10px]">Calls</h4>}
           {callsNav.map(({ label, href, icon: Icon }) => (
             <Link
               key={href}
@@ -109,18 +128,17 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               )}
             >
               <Icon className="w-5 h-5" />
-              {!collapsed && <span>{label}</span>}
+              {!collapsed && <span className="md:text-sm text-[13px]">{label}</span>}
             </Link>
           ))}
         </div>
 
-        {/* User + Settings at bottom */}
         <div className="mt-auto pt-6 border-t border-gray-800 space-y-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="w-full text-left flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-800 transition">
                 <User className="w-5 h-5" />
-                {!collapsed && <span>Account</span>}
+                {!collapsed && <span className="md:text-sm text-[13px]">Account</span>}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-white text-black ml-2">
@@ -141,7 +159,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             )}
           >
             <Settings className="w-5 h-5" />
-            {!collapsed && <span>Settings</span>}
+            {!collapsed && <span className="md:text-sm text-[13px]">Settings</span>}
           </Link>
         </div>
       </aside>

@@ -1,54 +1,154 @@
 // lib/api.ts
 
-export const BASE_URL = "https://test.aivocall.com"
+export const BASE_URL = "https://test.aivocall.com";
 
 function getToken() {
-  if (typeof window === "undefined") return null
-  return localStorage.getItem("access_token")
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("access_token");
 }
 
 export function authHeaders(): Record<string, string> {
-  const token = getToken()
-  console.log("TOKEN USED:", token)
+  const token = getToken();
+  console.log("TOKEN USED:", token);
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Accept: "application/json",
-  }
+  };
 
   if (token) {
-    headers["Authorization"] = `Bearer ${token}`
+    headers["Authorization"] = `Bearer ${token}`;
   } else {
-    console.warn("No access token found in localStorage.")
+    console.warn("No access token found in localStorage.");
   }
 
-  return headers
+  return headers;
 }
 
 export async function getVoiceAgents() {
-  const token = getToken()
-  if (!token) throw new Error("No access token present")
-
-  const res = await fetch(`${BASE_URL}/voice_agents`, {
-    headers: authHeaders(),
-  })
-
-  if (!res.ok) throw new Error("Failed to fetch agents")
-  return await res.json() // returns []
+  // TEMP MOCK for local development
+  return [
+    {
+      id: "mock-1",
+      name: "SalesBot",
+      phone_number: "+61 400 000 001",
+    },
+    {
+      id: "mock-2",
+      name: "SupportBot",
+      phone_number: "+61 400 000 002",
+    },
+  ];
 }
 
 export async function createVoiceAgent(data: { name: string; status: boolean }) {
-  const res = await fetch(`${BASE_URL}/voice_agents`, {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok) {
-    const errText = await res.text()
-    throw new Error(`Failed to create agent: ${errText}`)
-  }
-
-  // No response body is returned — just 201 Created
-  return true
+  console.log("Simulated creation with data:", data);
+  return true;
 }
+
+export async function getAgentDesigns() {
+  // TEMP MOCK for local development
+  return [
+    {
+      id: 1,
+      ai_greeting: "hi",
+      voice_agent_id: "mock-1",
+      tone: "friendly",
+      voice: "voice-1",
+      guidelines: "be helpful",
+    },
+    {
+      id: 2,
+      ai_greeting: null,
+      voice_agent_id: "mock-2",
+      tone: null,
+      voice: null,
+      guidelines: null,
+    },
+  ];
+}
+
+export async function updateAgentDesign(agentDesignId: string, data: any) {
+  console.log(`Simulated update for agentDesign ${agentDesignId}:`, data);
+  return true;
+}
+
+export async function getAgentGuidelines(agentDesignId: string) {
+  console.log(`Fetching guidelines for agentDesign ${agentDesignId}`);
+  return {
+    role: "As the AI receptionist for Acme Inc...",
+    background: "Acme Inc. is a global tech consultancy...",
+    personality: "Friendly, Professional, Enthusiastic",
+    responsibilities: "Answer questions, route calls, capture leads",
+    dontKnow: "Say you will escalate, collect name/email/phone",
+    scenarios: "Handle angry customers and inappropriate requests...",
+  };
+}
+
+export async function updateAgentGuidelines(agentDesignId: string, data: any) {
+  console.log(`Saving guidelines for agentDesign ${agentDesignId}:`, data);
+  return true;
+}
+
+// ✅ NEW: Fetch available static voice samples
+export async function getStaticAudioList() {
+  try {
+    const response = await fetch(`${BASE_URL}/list_static_audios`, {
+      method: "GET",
+      headers: authHeaders(),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Failed to fetch audio list: ${text}`);
+    }
+
+    const data = await response.json();
+    return data; // expect a list of audio file entries
+  } catch (error) {
+    console.error("Error fetching static audio list:", error);
+    return [];
+  }
+}
+export async function getCallHistory() {
+  // TEMP MOCK for local development
+  return [
+    {
+      id: "call-1",
+      agent_name: "SalesBot",
+      phone_number: "+61 400 000 001",
+      date: "2023-10-01T12:00:00Z",
+      duration: 120,
+      recording_url: "https://example.com/recording1.mp3",
+    },
+    {
+      id: "call-2",
+      agent_name: "SupportBot",
+      phone_number: "+61 400 000 002",
+      date: "2023-10-02T14:30:00Z",
+      duration: 90,
+      recording_url: "https://example.com/recording2.mp3",
+    },
+  ];
+}
+//once ready for testing
+/**export async function getCallHistory() {
+  try {
+    const response = await fetch(`${BASE_URL}/call_histories`, {
+      method: "GET",
+      headers: authHeaders(),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Failed to fetch call history: ${text}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching call history:", error);
+    return [];
+  }
+}
+ */

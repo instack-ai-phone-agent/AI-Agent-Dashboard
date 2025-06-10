@@ -22,55 +22,71 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
+import { getVoiceAgents, createVoiceAgent } from "@/lib/api"
 
 interface Agent {
   id: string
   name: string
-  phone_number: string
+  phone_number?: string
 }
 
 export default function AgentsSelection({ collapsed }: { collapsed: boolean }) {
   const [open, setOpen] = useState(false)
   const [agents, setAgents] = useState<Agent[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [newAgentName, setNewAgentName] = useState("")
-  const [newPhoneNumber, setNewPhoneNumber] = useState("")
+  const [agentName, setAgentName] = useState("")
+  const [organizationName, setOrganizationName] = useState("")
   const [loading, setLoading] = useState(false)
 
   const router = useRouter()
-  const companyName = "Acme Corp" // Replace with dynamic organization
+  const companyName = "Acme Corp" // Optional default fallback
+
+  const fetchAgents = async () => {
+    try {
+      const data = await getVoiceAgents()
+      setAgents(data)
+    } catch (err) {
+      console.error("Failed to load agents:", err)
+    }
+  }
 
   useEffect(() => {
-    fetch("https://test.aivocall.com/voice_agents")
-      .then((res) => res.json())
-      .then((data) => setAgents(data))
-      .catch(console.error)
+    fetchAgents()
   }, [])
 
   const handleCreateAgent = async () => {
+    if (!agentName || !organizationName) return
     setLoading(true)
+
     try {
       const response = await fetch("https://test.aivocall.com/voice_agents", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newAgentName,
-          phone_number: newPhoneNumber,
-        }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        body: JSON.stringify({ name: organizationName, status: true }),
       })
 
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.detail || "Failed to create agent")
+      if (!response.ok) throw new Error("Failed to create agent")
 
-      router.push(`/agent-setup?id=${data.id}`)
+      await fetchAgents()
+      toast.success(`Agent "${agentName}" created successfully`)
+      setDialogOpen(false)
+      setAgentName("")
+      setOrganizationName("")
+
+      const agentsRefetched = await getVoiceAgents()
+      const latestAgent = agentsRefetched.find((a: Agent) => a.name === organizationName)
+      if (latestAgent) {
+        router.push(`/agent-setup?id=${latestAgent.id}`)
+      }
     } catch (err: any) {
       console.error(err)
-      alert(err.message || "Something went wrong")
+      toast.error(err.message || "Something went wrong")
     } finally {
       setLoading(false)
-      setDialogOpen(false)
-      setNewAgentName("")
-      setNewPhoneNumber("")
     }
   }
 
@@ -108,7 +124,9 @@ export default function AgentsSelection({ collapsed }: { collapsed: boolean }) {
               >
                 <Link href={`/agents/${agent.id}`} className="w-full">
                   <span className="font-medium">{agent.name}</span>
-                  <span className="text-xs text-gray-500">{agent.phone_number}</span>
+                  {agent.phone_number && (
+                    <span className="text-xs text-gray-500">{agent.phone_number}</span>
+                  )}
                 </Link>
               </DropdownMenuItem>
             ))}
@@ -134,24 +152,24 @@ export default function AgentsSelection({ collapsed }: { collapsed: boolean }) {
             <div>
               <label className="block text-sm font-medium mb-1">Agent Name</label>
               <Input
-                value={newAgentName}
-                onChange={(e) => setNewAgentName(e.target.value)}
+                value={agentName}
+                onChange={(e) => setAgentName(e.target.value)}
                 placeholder="e.g. SalesBot"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Phone Number</label>
+              <label className="block text-sm font-medium mb-1">Organization Name</label>
               <Input
-                value={newPhoneNumber}
-                onChange={(e) => setNewPhoneNumber(e.target.value)}
-                placeholder="+61 400 111 222"
+                value={organizationName}
+                onChange={(e) => setOrganizationName(e.target.value)}
+                placeholder="e.g. Acme Inc."
               />
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <DialogClose asChild>
                 <Button variant="ghost">Cancel</Button>
               </DialogClose>
-              <Button onClick={handleCreateAgent} disabled={loading}>
+              <Button onClick={handleCreateAgent} disabled={loading || !agentName || !organizationName}>
                 {loading ? "Creating..." : "Create"}
               </Button>
             </div>

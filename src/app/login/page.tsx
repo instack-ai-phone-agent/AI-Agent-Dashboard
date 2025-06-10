@@ -1,56 +1,54 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Icons } from "@/components/ui/icons";
-import { Toaster } from "@/components/ui/sonner"
-
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Icons } from "@/components/ui/icons"
+import { toast } from "sonner"
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const router = useRouter();
-  
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const router = useRouter()
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setLoading(true)
+  setError("")
 
-    try {
-      const response = await fetch("https://test.aivocall.com/auth/token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          grant_type: "password",
-          username: email,
-          password: password,
-        }),
-      });
+  try {
+    const response = await fetch("https://test.aivocall.com/auth/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "password",
+        username: email,
+        password: password,
+      }),
+    })
 
-      const data = await response.json();
+    const data = await response.json()
 
-      if (!response.ok) {
-        throw new Error(data.detail || "Login failed");
-      }
-
-      // Save the access token (in localStorage or cookie)
-      localStorage.setItem("access_token", data.access_token);
-
-      router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Something went wrong.");
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error(data.detail || "Login failed")
     }
-  };
+
+    localStorage.setItem("access_token", data.access_token)
+    toast.success("Login successful")
+    router.push("/dashboard")
+  } catch (err: any) {
+    setError(err.message || "Something went wrong.")
+  } finally {
+    setLoading(false)
+  }
+}
+
 
   return (
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
@@ -93,7 +91,7 @@ export default function LoginPage() {
             </Button>
           </form>
 
-                    <p className="text-xs text-center text-gray-500 mt-2">
+          <p className="text-xs text-center text-gray-500 mt-2">
             By clicking on log in, you agree to our{" "}
             <a href="/terms" className="underline">
               Terms of Service
@@ -123,5 +121,5 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
-  );
+  )
 }

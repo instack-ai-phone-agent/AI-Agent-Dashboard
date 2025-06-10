@@ -69,11 +69,19 @@ export default function AgentDesignPage() {
   if (loading) return <DashboardShell>Loading...</DashboardShell>;
   if (!agentData) return <DashboardShell>Agent design not found.</DashboardShell>;
 
+  const showPhoneReminder = !agentData.phone_number;
+
   return (
     <DashboardShell>
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Agent Design</h1>
       </div>
+
+      {showPhoneReminder && (
+        <div className="mb-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded">
+          ⚠️ Please add a phone number to use this agent for calling, chatting, or answering.
+        </div>
+      )}
 
       <Tabs defaultValue="agent-design" className="w-full space-y-6">
         <TabsList>

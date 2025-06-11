@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { DateRange } from "react-day-picker";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Download, Eye, EyeOff } from "lucide-react";
 
 interface RecentCallsTableProps {
   agentId: string;
@@ -22,7 +22,19 @@ interface RecentCallsTableProps {
   onRowClick: (callId: string) => void;
 }
 
-const mockCalls = [
+interface Call {
+  id: string;
+  name: string;
+  time: string;
+  phone: string;
+  duration: string;
+  topic: string;
+  endedReason: string;
+  outcome: string;
+  agentId: string;
+}
+
+const mockCalls: Call[] = [
   {
     id: "1",
     name: "John Smith",
@@ -32,7 +44,7 @@ const mockCalls = [
     topic: "Product Inquiry",
     endedReason: "Customer Ended",
     outcome: "Follow-up scheduled",
-    agentId: "sidebar-selected-agent",
+    agentId: "agent-1",
   },
   {
     id: "2",
@@ -43,7 +55,7 @@ const mockCalls = [
     topic: "Support Request",
     endedReason: "Silence Timeout",
     outcome: "Escalated to Tier 2",
-    agentId: "sidebar-selected-agent",
+    agentId: "agent-1",
   },
   {
     id: "3",
@@ -54,7 +66,7 @@ const mockCalls = [
     topic: "Billing Issue",
     endedReason: "Max Duration",
     outcome: "Resolved",
-    agentId: "sidebar-selected-agent",
+    agentId: "agent-1",
   },
   {
     id: "4",
@@ -65,7 +77,7 @@ const mockCalls = [
     topic: "Voicemail",
     endedReason: "Voicemail",
     outcome: "Message left",
-    agentId: "sidebar-selected-agent",
+    agentId: "agent-2",
   },
 ];
 
@@ -79,6 +91,55 @@ export default function RecentCallsTable({
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const selectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(filtered.map((c) => c.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const exportSelected = () => {
+    const data = filtered.filter((c) => selectedIds.includes(c.id));
+    const csv = [
+      [
+        "Date",
+        "Time",
+        "Phone",
+        "Duration",
+        "Topic",
+        "Ended Reason",
+        "Outcome",
+      ],
+      ...data.map((call) => [
+        new Date(call.time).toLocaleDateString("en-AU"),
+        new Date(call.time).toLocaleTimeString("en-AU", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        call.phone,
+        call.duration,
+        call.topic,
+        call.endedReason,
+        call.outcome,
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "calls_export.csv";
+    link.click();
+  };
+
   const filtered = mockCalls
     .filter((call) =>
       call.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -88,7 +149,7 @@ export default function RecentCallsTable({
     .filter((call) => {
       if (!dateRange?.from || !dateRange?.to) return true;
       const callDate = new Date(call.time);
-      return callDate >= new Date(dateRange.from) && callDate <= new Date(dateRange.to);
+      return callDate >= dateRange.from && callDate <= dateRange.to;
     })
     .filter((call) => {
       if (!filters?.length) return true;
@@ -101,46 +162,42 @@ export default function RecentCallsTable({
       });
     });
 
-  const isSelected = (id: string) => selectedIds.includes(id);
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
-  };
-
-  const exportSelected = () => {
-    const selectedData = mockCalls.filter((call) => selectedIds.includes(call.id));
-    console.log("Exporting:", selectedData);
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">Recent Calls</h2>
         <div className="flex gap-2">
-          <Input
-            placeholder="Search by name or phone..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-64"
-          />
-          {selectedIds.length > 0 && (
-            <Button size="sm" onClick={exportSelected} variant="outline">
-              Export selected
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={selectedIds.length === 0}
+            onClick={exportSelected}
+          >
+            <Download className="h-4 w-4 mr-2" /> Export
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={selectedIds.length === 0}
+            onClick={() => setSelectedIds([])}
+          >
+            <EyeOff className="h-4 w-4 mr-2" /> Mark as Read
+          </Button>
         </div>
+        <Input
+          placeholder="Search by name or phone..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-64"
+        />
       </div>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>
-              <Checkbox
+              <input
+                type="checkbox"
                 checked={selectedIds.length === filtered.length}
-                onCheckedChange={(checked) =>
-                  setSelectedIds(checked ? filtered.map((c) => c.id) : [])
-                }
+                onChange={selectAll}
               />
             </TableHead>
             <TableHead>Date & Time</TableHead>
@@ -158,10 +215,12 @@ export default function RecentCallsTable({
               className="cursor-pointer hover:bg-gray-50"
               onClick={() => onRowClick(call.id)}
             >
-              <TableCell onClick={(e) => e.stopPropagation()}>
-                <Checkbox
-                  checked={isSelected(call.id)}
-                  onCheckedChange={() => toggleSelect(call.id)}
+              <TableCell>
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(call.id)}
+                  onChange={() => toggleSelect(call.id)}
+                  onClick={(e) => e.stopPropagation()}
                 />
               </TableCell>
               <TableCell>

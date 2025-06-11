@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { Users, PlusCircle } from "lucide-react"
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Users, PlusCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -11,7 +11,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -19,92 +19,80 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogClose,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { toast } from "sonner"
-import { getVoiceAgents, createVoiceAgent } from "@/lib/api"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { getVoiceAgents, createVoiceAgent } from "@/lib/api";
 
 interface Agent {
-  id: string
-  name: string
-  phone_number?: string
+  id: string;
+  name: string;
+  phone_number?: string;
 }
 
 export default function AgentsSelection({ collapsed }: { collapsed: boolean }) {
-  const [open, setOpen] = useState(false)
-  const [agents, setAgents] = useState<Agent[]>([])
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [agentName, setAgentName] = useState("")
-  const [organizationName, setOrganizationName] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [agentName, setAgentName] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const router = useRouter()
-  const companyName = "Acme Corp" // Optional default fallback
+  const router = useRouter();
+  const companyName = "Acme Corp";
 
   const fetchAgents = async () => {
     try {
-      const data = await getVoiceAgents()
-      setAgents(data)
+      const data = await getVoiceAgents();
+      setAgents(data);
     } catch (err) {
-      console.error("Failed to load agents:", err)
+      console.error("Failed to load agents:", err);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchAgents()
-  }, [])
+    fetchAgents();
+  }, []);
 
   const handleCreateAgent = async () => {
-    if (!agentName || !organizationName) return
-    setLoading(true)
+    if (!agentName) return;
+    setLoading(true);
 
     try {
-      const response = await fetch("https://test.aivocall.com/voice_agents", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-        body: JSON.stringify({ name: organizationName, status: true }),
-      })
+      const newAgent = await createVoiceAgent({ name: agentName, status: true });
 
-      if (!response.ok) throw new Error("Failed to create agent")
+      toast.success(`Agent "${agentName}" created successfully`);
+      setDialogOpen(false);
+      setAgentName("");
 
-      await fetchAgents()
-      toast.success(`Agent "${agentName}" created successfully`)
-      setDialogOpen(false)
-      setAgentName("")
-      setOrganizationName("")
+      await fetchAgents();
 
-      const agentsRefetched = await getVoiceAgents()
-      const latestAgent = agentsRefetched.find((a: Agent) => a.name === organizationName)
-      if (latestAgent) {
-        router.push(`/agent-setup?id=${latestAgent.id}`)
+      if (newAgent && newAgent.id) {
+        router.push(`/agent-setup?id=${newAgent.id}`);
       }
     } catch (err: any) {
-      console.error(err)
-      toast.error(err.message || "Something went wrong")
+      console.error(err);
+      toast.error(err.message || "Something went wrong while creating the agent.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger asChild>
-  <button
-    className={`flex items-center w-full gap-2 px-3 py-2 rounded transition ${
-      open ? "bg-gray-800" : "hover:bg-gray-800"
-    } ${collapsed ? "justify-center" : ""}`}
-    disabled={collapsed}
-  >
-    <Users className="w-5 h-5" />
-    {!collapsed && <span className="md:text-sm text-[13px]">Agents</span>}
-  </button>
-</DropdownMenuTrigger>
+            <button
+              className={`flex items-center w-full gap-2 px-3 py-2 rounded transition ${
+                open ? "bg-gray-800" : "hover:bg-gray-800"
+              } ${collapsed ? "justify-center" : ""}`}
+              disabled={collapsed}
+            >
+              <Users className="w-5 h-5" />
+              {!collapsed && <span className="md:text-sm text-[13px]">Agents</span>}
+            </button>
+          </DropdownMenuTrigger>
 
           <DropdownMenuContent
             side="right"
@@ -157,19 +145,14 @@ export default function AgentsSelection({ collapsed }: { collapsed: boolean }) {
                 placeholder="e.g. SalesBot"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Organization Name</label>
-              <Input
-                value={organizationName}
-                onChange={(e) => setOrganizationName(e.target.value)}
-                placeholder="e.g. Acme Inc."
-              />
-            </div>
             <div className="flex justify-end gap-2 pt-2">
               <DialogClose asChild>
                 <Button variant="ghost">Cancel</Button>
               </DialogClose>
-              <Button onClick={handleCreateAgent} disabled={loading || !agentName || !organizationName}>
+              <Button
+                onClick={handleCreateAgent}
+                disabled={loading || !agentName}
+              >
                 {loading ? "Creating..." : "Create"}
               </Button>
             </div>
@@ -177,5 +160,5 @@ export default function AgentsSelection({ collapsed }: { collapsed: boolean }) {
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

@@ -26,28 +26,45 @@ export function authHeaders(): Record<string, string> {
 }
 
 export async function getVoiceAgents() {
-  // TEMP MOCK for local development
-  return [
-    {
-      id: "mock-1",
-      name: "SalesBot",
-      phone_number: "+61 400 000 001",
-    },
-    {
-      id: "mock-2",
-      name: "SupportBot",
-      phone_number: "+61 400 000 002",
-    },
-  ];
+  try {
+    const response = await fetch(`${BASE_URL}/voice_agents`, {
+      method: "GET",
+      headers: authHeaders(),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Failed to fetch voice agents: ${text}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching voice agents:", error);
+    return [];
+  }
 }
 
 export async function createVoiceAgent(data: { name: string; status: boolean }) {
-  console.log("Simulated creation with data:", data);
-  return true;
+  try {
+    const response = await fetch(`${BASE_URL}/voice_agents`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Failed to create voice agent: ${text}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error creating voice agent:", error);
+    throw error;
+  }
 }
 
 export async function getAgentDesigns() {
-  // TEMP MOCK for local development
   return [
     {
       id: 1,
@@ -90,7 +107,6 @@ export async function updateAgentGuidelines(agentDesignId: string, data: any) {
   return true;
 }
 
-// ✅ NEW: Fetch available static voice samples
 export async function getStaticAudioList() {
   try {
     const response = await fetch(`${BASE_URL}/list_static_audios`, {
@@ -104,14 +120,14 @@ export async function getStaticAudioList() {
     }
 
     const data = await response.json();
-    return data; // expect a list of audio file entries
+    return data;
   } catch (error) {
     console.error("Error fetching static audio list:", error);
     return [];
   }
 }
+
 export async function getCallHistory() {
-  // TEMP MOCK for local development
   return [
     {
       id: "call-1",
@@ -131,24 +147,3 @@ export async function getCallHistory() {
     },
   ];
 }
-//once ready for testing
-/**export async function getCallHistory() {
-  try {
-    const response = await fetch(`${BASE_URL}/call_histories`, {
-      method: "GET",
-      headers: authHeaders(),
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Failed to fetch call history: ${text}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching call history:", error);
-    return [];
-  }
-}
- */

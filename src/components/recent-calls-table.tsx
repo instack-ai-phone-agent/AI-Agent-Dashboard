@@ -32,7 +32,7 @@ const mockCalls = [
     topic: "Product Inquiry",
     endedReason: "Customer Ended",
     outcome: "Follow-up scheduled",
-    agentId: "agent-1",
+    agentId: "sidebar-selected-agent",
   },
   {
     id: "2",
@@ -43,7 +43,7 @@ const mockCalls = [
     topic: "Support Request",
     endedReason: "Silence Timeout",
     outcome: "Escalated to Tier 2",
-    agentId: "agent-1",
+    agentId: "sidebar-selected-agent",
   },
   {
     id: "3",
@@ -54,7 +54,7 @@ const mockCalls = [
     topic: "Billing Issue",
     endedReason: "Max Duration",
     outcome: "Resolved",
-    agentId: "agent-1",
+    agentId: "sidebar-selected-agent",
   },
   {
     id: "4",
@@ -65,7 +65,7 @@ const mockCalls = [
     topic: "Voicemail",
     endedReason: "Voicemail",
     outcome: "Message left",
-    agentId: "agent-2",
+    agentId: "sidebar-selected-agent",
   },
 ];
 
@@ -79,12 +79,6 @@ export default function RecentCallsTable({
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const toggleSelection = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
-  };
-
   const filtered = mockCalls
     .filter((call) =>
       call.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -94,7 +88,7 @@ export default function RecentCallsTable({
     .filter((call) => {
       if (!dateRange?.from || !dateRange?.to) return true;
       const callDate = new Date(call.time);
-      return callDate >= dateRange.from && callDate <= dateRange.to;
+      return callDate >= new Date(dateRange.from) && callDate <= new Date(dateRange.to);
     })
     .filter((call) => {
       if (!filters?.length) return true;
@@ -107,21 +101,48 @@ export default function RecentCallsTable({
       });
     });
 
+  const isSelected = (id: string) => selectedIds.includes(id);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const exportSelected = () => {
+    const selectedData = mockCalls.filter((call) => selectedIds.includes(call.id));
+    console.log("Exporting:", selectedData);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">Recent Calls</h2>
-        <Input
-          placeholder="Search by name or phone..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-64"
-        />
+        <div className="flex gap-2">
+          <Input
+            placeholder="Search by name or phone..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-64"
+          />
+          {selectedIds.length > 0 && (
+            <Button size="sm" onClick={exportSelected} variant="outline">
+              Export selected
+            </Button>
+          )}
+        </div>
       </div>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-4">&nbsp;</TableHead>
+            <TableHead>
+              <Checkbox
+                checked={selectedIds.length === filtered.length}
+                onCheckedChange={(checked) =>
+                  setSelectedIds(checked ? filtered.map((c) => c.id) : [])
+                }
+              />
+            </TableHead>
             <TableHead>Date & Time</TableHead>
             <TableHead>Phone Number</TableHead>
             <TableHead>Duration</TableHead>
@@ -139,8 +160,8 @@ export default function RecentCallsTable({
             >
               <TableCell onClick={(e) => e.stopPropagation()}>
                 <Checkbox
-                  checked={selectedIds.includes(call.id)}
-                  onCheckedChange={() => toggleSelection(call.id)}
+                  checked={isSelected(call.id)}
+                  onCheckedChange={() => toggleSelect(call.id)}
                 />
               </TableCell>
               <TableCell>

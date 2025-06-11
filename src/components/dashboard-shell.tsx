@@ -52,7 +52,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   ];
 
   const callsNav = [
-    { label: "Call History", href: "/calls", icon: PhoneCall },
+    { label: "Call History", href: "/history", icon: PhoneCall },
   ];
 
   return (

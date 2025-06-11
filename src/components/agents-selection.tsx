@@ -95,16 +95,16 @@ export default function AgentsSelection({ collapsed }: { collapsed: boolean }) {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger asChild>
-            <button
-              className={`flex items-center w-full gap-2 px-3 py-2 rounded transition ${
-                open ? "bg-gray-800" : "hover:bg-gray-800"
-              } ${collapsed ? "justify-center" : ""}`}
-              disabled={collapsed}
-            >
-              <Users className="w-5 h-5" />
-              {!collapsed && <span>Agents</span>}
-            </button>
-          </DropdownMenuTrigger>
+  <button
+    className={`flex items-center w-full gap-2 px-3 py-2 rounded transition ${
+      open ? "bg-gray-800" : "hover:bg-gray-800"
+    } ${collapsed ? "justify-center" : ""}`}
+    disabled={collapsed}
+  >
+    <Users className="w-5 h-5" />
+    {!collapsed && <span className="md:text-sm text-[13px]">Agents</span>}
+  </button>
+</DropdownMenuTrigger>
 
           <DropdownMenuContent
             side="right"

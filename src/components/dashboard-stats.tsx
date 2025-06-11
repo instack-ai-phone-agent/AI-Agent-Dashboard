@@ -2,11 +2,14 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, PhoneIncoming, PhoneOutgoing, Volume2, DollarSign } from "lucide-react";
+import type { DateRange } from "react-day-picker";
 
 interface DashboardStatsProps {
   agentId: string;
   timeframe: "Daily" | "Weekly" | "Monthly";
+  dateRange: DateRange | undefined;
 }
+
 
 export default function DashboardStats({ agentId, timeframe }: DashboardStatsProps) {
   const stats = [

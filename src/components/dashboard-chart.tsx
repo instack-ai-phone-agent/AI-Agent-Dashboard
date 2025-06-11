@@ -1,5 +1,6 @@
 "use client";
 
+import type { DateRange } from "react-day-picker";
 import {
   ResponsiveContainer,
   LineChart,
@@ -12,7 +13,8 @@ import {
 
 interface DashboardChartProps {
   agentId: string;
-  timeframe: string;
+  timeframe: "Daily" | "Weekly" | "Monthly";
+  dateRange: DateRange | undefined;
 }
 
 const chartDataMap: Record<string, { name: string; calls: number }[]> = {

@@ -26,7 +26,7 @@ export default function NumberDialog() {
     <Dialog open={showNumberDialog} onOpenChange={setShowNumberDialog}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="h-8 px-2">
-          Get a Number
+          Assign a Number
           <ArrowRight className="h-4 w-4 ml-1" />
         </Button>
       </DialogTrigger>

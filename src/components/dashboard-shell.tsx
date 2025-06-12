@@ -48,7 +48,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   ];
 
   const setupNav = [
-    { label: "Agent Design", href: "/agent-setup", icon: Bot },
+    { label: "Agent Design", href: "/agent-designs", icon: Bot },
   ];
 
   const callsNav = [

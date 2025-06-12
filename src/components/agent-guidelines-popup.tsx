@@ -15,9 +15,10 @@ import { Settings } from "lucide-react";
 interface AgentGuidelinesPopupProps {
   value: string;
   onChange: (val: string) => void;
+  onSave?: () => void; // optional save callback
 }
 
-export default function AgentGuidelinesPopup({ value, onChange }: AgentGuidelinesPopupProps) {
+export default function AgentGuidelinesPopup({ value, onChange, onSave }: AgentGuidelinesPopupProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -43,10 +44,18 @@ export default function AgentGuidelinesPopup({ value, onChange }: AgentGuideline
           placeholder="Enter text or type '/' for commands"
         />
         <DialogClose asChild>
-          <Button variant="default" className="mt-4 w-full">
-            Close
-          </Button>
-        </DialogClose>
+        <Button
+          variant="default"
+          className="mt-4 w-full"
+          onClick={() => {
+            if (typeof onSave === "function") {
+              onSave(); // trigger save
+            }
+          }}
+        >
+          Save Guideline
+        </Button>
+      </DialogClose>
       </DialogContent>
     </Dialog>
   );

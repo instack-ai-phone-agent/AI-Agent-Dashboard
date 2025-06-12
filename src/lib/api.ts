@@ -32,10 +32,7 @@ export async function getVoiceAgents() {
       headers: authHeaders(),
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Failed to fetch voice agents: ${text}`);
-    }
+    if (!response.ok) throw new Error("Failed to fetch voice agents");
 
     return await response.json();
   } catch (error) {
@@ -44,7 +41,7 @@ export async function getVoiceAgents() {
   }
 }
 
-export async function createVoiceAgent(data: { name: string; status: boolean }) {
+export async function createVoiceAgent(data: { name: string; status: boolean; organization_id?: number }) {
   try {
     const response = await fetch(`${BASE_URL}/voice_agents`, {
       method: "POST",
@@ -52,10 +49,7 @@ export async function createVoiceAgent(data: { name: string; status: boolean }) 
       body: JSON.stringify(data),
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Failed to create voice agent: ${text}`);
-    }
+    if (!response.ok) throw new Error("Failed to create agent");
 
     return await response.json();
   } catch (error) {
@@ -64,86 +58,162 @@ export async function createVoiceAgent(data: { name: string; status: boolean }) 
   }
 }
 
-export async function getAgentDesigns() {
-  return [
-    {
-      id: 1,
-      ai_greeting: "hi",
-      voice_agent_id: "mock-1",
-      tone: "friendly",
-      voice: "voice-1",
-      guidelines: "be helpful",
-    },
-    {
-      id: 2,
-      ai_greeting: null,
-      voice_agent_id: "mock-2",
-      tone: null,
-      voice: null,
-      guidelines: null,
-    },
-  ];
-}
-
-export async function updateAgentDesign(agentDesignId: string, data: any) {
-  console.log(`Simulated update for agentDesign ${agentDesignId}:`, data);
-  return true;
-}
-
-export async function getAgentGuidelines(agentDesignId: string) {
-  console.log(`Fetching guidelines for agentDesign ${agentDesignId}`);
-  return {
-    role: "As the AI receptionist for Acme Inc...",
-    background: "Acme Inc. is a global tech consultancy...",
-    personality: "Friendly, Professional, Enthusiastic",
-    responsibilities: "Answer questions, route calls, capture leads",
-    dontKnow: "Say you will escalate, collect name/email/phone",
-    scenarios: "Handle angry customers and inappropriate requests...",
-  };
-}
-
-export async function updateAgentGuidelines(agentDesignId: string, data: any) {
-  console.log(`Saving guidelines for agentDesign ${agentDesignId}:`, data);
-  return true;
-}
-
-export async function getStaticAudioList() {
+export async function updateVoiceAgent(agentId: number, data: { name: string; status: boolean; organization_id?: number }) {
   try {
-    const response = await fetch(`${BASE_URL}/list_static_audios`, {
+    const response = await fetch(`${BASE_URL}/voice_agents/${agentId}`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) throw new Error("Failed to update voice agent");
+  } catch (error) {
+    console.error("Error updating voice agent:", error);
+    throw error;
+  }
+}
+
+export async function deleteVoiceAgent(agentId: number) {
+  try {
+    const response = await fetch(`${BASE_URL}/voice_agents/${agentId}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+
+    if (!response.ok) throw new Error("Failed to delete voice agent");
+  } catch (error) {
+    console.error("Error deleting voice agent:", error);
+    throw error;
+  }
+}
+
+export async function getMyUserOrganizations() {
+  try {
+    const response = await fetch(`${BASE_URL}/user_organizations/me`, {
+      method: "GET",
+      headers: authHeaders(),
+    });
+
+    if (!response.ok) throw new Error("Failed to fetch user organizations");
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching user organizations:", error);
+    return [];
+  }
+}
+
+export async function createUserOrganization(name: string) {
+  try {
+    const response = await fetch(`${BASE_URL}/user_organizations`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ name }),
+    });
+
+    if (!response.ok) throw new Error("Failed to create user organization");
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error creating user organization:", error);
+    throw error;
+  }
+}
+
+export async function getUserOrganizationById(id: number) {
+  try {
+    const response = await fetch(`${BASE_URL}/user_organizations/${id}`, {
+      method: "GET",
+      headers: authHeaders(),
+    });
+
+    if (!response.ok) throw new Error("Failed to fetch user organization");
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching user organization by ID:", error);
+    return null;
+  }
+}
+
+export async function deleteUserOrganization(id: number) {
+  try {
+    const response = await fetch(`${BASE_URL}/user_organizations/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+
+    if (!response.ok) throw new Error("Failed to delete user organization");
+  } catch (error) {
+    console.error("Error deleting user organization:", error);
+    throw error;
+  }
+}
+
+export async function getVoiceAgentsByOrg(organizationId: number) {
+  try {
+    const allAgents = await getVoiceAgents();
+    return allAgents.filter((agent: any) => agent.organization_id === organizationId);
+  } catch (error) {
+    console.error("Error filtering voice agents by org:", error);
+    return [];
+  }
+}
+
+export async function getAgentDesigns() {
+  try {
+    const response = await fetch(`${BASE_URL}/agent-designs`, {
       method: "GET",
       headers: authHeaders(),
     });
 
     if (!response.ok) {
       const text = await response.text();
-      throw new Error(`Failed to fetch audio list: ${text}`);
+      throw new Error(`Failed to fetch agent designs: ${text}`);
     }
 
-    const data = await response.json();
-    return data;
+    return await response.json();
   } catch (error) {
-    console.error("Error fetching static audio list:", error);
+    console.error("Error fetching agent designs:", error);
     return [];
   }
 }
 
-export async function getCallHistory() {
-  return [
-    {
-      id: "call-1",
-      agent_name: "SalesBot",
-      phone_number: "+61 400 000 001",
-      date: "2023-10-01T12:00:00Z",
-      duration: 120,
-      recording_url: "https://example.com/recording1.mp3",
-    },
-    {
-      id: "call-2",
-      agent_name: "SupportBot",
-      phone_number: "+61 400 000 002",
-      date: "2023-10-02T14:30:00Z",
-      duration: 90,
-      recording_url: "https://example.com/recording2.mp3",
-    },
-  ];
+export async function updateAgentDesign(agentDesignId: string, payload: {
+  ai_greeting: string;
+  tone: string;
+  voice: string;
+  guidelines: string;
+}) {
+  const response = await fetch(`${BASE_URL}/agent-designs/${agentDesignId}`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Failed to update design: ${text}`);
+  }
+
+  return true;
 }
+
+export async function getAgentGuidelines(voiceAgentId: string) {
+  try {
+    const response = await fetch(`${BASE_URL}/voice_agents/instructions/${voiceAgentId}`, {
+      method: "GET",
+      headers: authHeaders(),
+    });
+
+    if (!response.ok) throw new Error("Failed to fetch guidelines");
+
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
+

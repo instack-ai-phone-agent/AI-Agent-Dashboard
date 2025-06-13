@@ -209,41 +209,77 @@ export default function AgentDesignPage() {
         </TabsContent>
 
         <TabsContent value="knowledge-base">
-          <h2 className="text-xl font-semibold mb-4">Knowledge Base</h2>
-          <p className="text-gray-600 mb-4 text-sm">
-            Add internal knowledge your AI Agent should know to answer questions accurately.
-          </p>
+  <h2 className="text-2xl font-semibold mb-1">Knowledge Base</h2>
+  <p className="text-sm text-gray-600 mb-6">
+    Provide your Instack AI Agent with your company's knowledge so it can answer customers' questions accurately.{" "}
+    <a href="#" className="text-indigo-600 hover:underline">Learn more</a>
+  </p>
 
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium mb-1">Add a Knowledge Entry</label>
-              <textarea
-                rows={4}
-                placeholder="e.g. Our office hours are 9am–5pm, Monday to Friday..."
-                className="w-full border rounded-md p-3 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-              <Button className="mt-2">+ Add to Knowledge Base</Button>
-            </div>
+  {/* Inner Tabs: Documents / Websites */}
+  <Tabs defaultValue="documents" className="w-full">
+    <TabsList className="mb-4">
+      <TabsTrigger value="documents">Documents</TabsTrigger>
+      <TabsTrigger value="websites">Websites</TabsTrigger>
+    </TabsList>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">Upload a Document</label>
-              <input
-                type="file"
-                accept=".pdf,.docx,.txt"
-                className="block w-full text-sm text-gray-500 border border-gray-300 rounded-md cursor-pointer file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-              />
-              <p className="text-xs text-gray-400 mt-1">Accepted formats: PDF, DOCX, TXT (max 5MB)</p>
-            </div>
+    <TabsContent value="documents">
+  <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-2">
+    <div className="flex flex-wrap gap-2">
+      <Button variant="outline">
+        {/* Keep the existing icon setup here if you have it */}
+        Upload File
+      </Button>
+      <Button variant="outline">
+        {/* Keep the existing icon setup here if you have it */}
+        Blank Document
+      </Button>
+    </div>
+    <div className="flex gap-2 mt-2 md:mt-0">
+      <Input placeholder="Filter documents ..." className="w-48" />
+      <Select>
+        <SelectTrigger className="w-32">
+          <SelectValue placeholder="Active" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="active">Active</SelectItem>
+          <SelectItem value="inactive">Inactive</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  </div>
+  {/* Placeholder for documents table – will be built next */}
+  <div className="overflow-auto border rounded-md">
+    <table className="min-w-full divide-y divide-gray-200 text-sm">
+      <thead className="bg-gray-50">
+        <tr>
+          <th className="px-4 py-2 text-left font-semibold text-gray-700">Name</th>
+          <th className="px-4 py-2 text-left font-semibold text-gray-700">Last Updated By</th>
+          <th className="px-4 py-2 text-left font-semibold text-gray-700">Last Updated At</th>
+          <th className="px-4 py-2 text-left font-semibold text-gray-700">Usage Mode</th>
+          <th className="px-4 py-2 text-left font-semibold text-gray-700">Status</th>
+          <th className="px-4 py-2 text-right font-semibold text-gray-700">Actions</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-gray-100">
+        {/* Rows will be injected here using map once connected */}
+        <tr>
+          <td colSpan={6} className="px-4 py-4 text-center text-gray-500">No results.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-            <div className="pt-4 border-t">
-              <h4 className="font-semibold mb-2 text-sm">Existing Knowledge Entries</h4>
-              <ul className="space-y-2 text-sm text-gray-800">
-                <li className="bg-white p-3 rounded border">Our support team is available from 8am–6pm AEST.</li>
-                <li className="bg-white p-3 rounded border">You can cancel your subscription with 30 days' notice.</li>
-              </ul>
-            </div>
-          </div>
-        </TabsContent>
+  <p className="mt-4 text-sm text-gray-500">0 of 0 row(s) selected.</p>
+</TabsContent>
+
+    <TabsContent value="websites">
+      {/* This is where we’ll build the Add Website form and websites table */}
+      <p className="text-sm text-gray-600 mb-2">Manage your linked websites.</p>
+    </TabsContent>
+  </Tabs>
+</TabsContent>
+
+
 
         <TabsContent value="settings">
           <p className="text-sm text-gray-500">Settings panel coming soon.</p>

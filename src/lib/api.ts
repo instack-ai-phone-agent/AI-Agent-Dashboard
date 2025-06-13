@@ -2,30 +2,29 @@
 
 export const BASE_URL = "https://test.aivocall.com";
 
-function getToken() {
+function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("access_token");
 }
 
 export function authHeaders(): Record<string, string> {
   const token = getToken();
-  console.log("TOKEN USED:", token);
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     Accept: "application/json",
+    "Content-Type": "application/json",
   };
 
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
-  } else {
-    console.warn("No access token found in localStorage.");
   }
 
   return headers;
 }
 
-export async function getVoiceAgents() {
+// ------------------ Voice Agent APIs ------------------
+
+export async function getVoiceAgents(): Promise<any[]> {
   try {
     const response = await fetch(`${BASE_URL}/voice_agents`, {
       method: "GET",
@@ -33,7 +32,6 @@ export async function getVoiceAgents() {
     });
 
     if (!response.ok) throw new Error("Failed to fetch voice agents");
-
     return await response.json();
   } catch (error) {
     console.error("Error fetching voice agents:", error);
@@ -41,53 +39,44 @@ export async function getVoiceAgents() {
   }
 }
 
-export async function createVoiceAgent(data: { name: string; status: boolean; organization_id?: number }) {
-  try {
-    const response = await fetch(`${BASE_URL}/voice_agents`, {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify(data),
-    });
+export async function createVoiceAgent(data: { name: string; status: boolean; organization_id?: number }): Promise<any> {
+  const response = await fetch(`${BASE_URL}/voice_agents`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
 
-    if (!response.ok) throw new Error("Failed to create agent");
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error creating voice agent:", error);
-    throw error;
-  }
+  if (!response.ok) throw new Error("Failed to create agent");
+  return await response.json();
 }
 
-export async function updateVoiceAgent(agentId: number, data: { name: string; status: boolean; organization_id?: number }) {
-  try {
-    const response = await fetch(`${BASE_URL}/voice_agents/${agentId}`, {
-      method: "PUT",
-      headers: authHeaders(),
-      body: JSON.stringify(data),
-    });
+export async function updateVoiceAgent(agentId: number, data: { name: string; status: boolean; organization_id?: number }): Promise<void> {
+  const response = await fetch(`${BASE_URL}/voice_agents/${agentId}`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
 
-    if (!response.ok) throw new Error("Failed to update voice agent");
-  } catch (error) {
-    console.error("Error updating voice agent:", error);
-    throw error;
-  }
+  if (!response.ok) throw new Error("Failed to update voice agent");
 }
 
-export async function deleteVoiceAgent(agentId: number) {
-  try {
-    const response = await fetch(`${BASE_URL}/voice_agents/${agentId}`, {
-      method: "DELETE",
-      headers: authHeaders(),
-    });
+export async function deleteVoiceAgent(agentId: number): Promise<void> {
+  const response = await fetch(`${BASE_URL}/voice_agents/${agentId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
 
-    if (!response.ok) throw new Error("Failed to delete voice agent");
-  } catch (error) {
-    console.error("Error deleting voice agent:", error);
-    throw error;
-  }
+  if (!response.ok) throw new Error("Failed to delete voice agent");
 }
 
-export async function getMyUserOrganizations() {
+export async function getVoiceAgentsByOrg(organizationId: number): Promise<any[]> {
+  const allAgents = await getVoiceAgents();
+  return allAgents.filter((agent: any) => agent.organization_id === organizationId);
+}
+
+// ------------------ User Organization APIs ------------------
+
+export async function getMyUserOrganizations(): Promise<any[]> {
   try {
     const response = await fetch(`${BASE_URL}/user_organizations/me`, {
       method: "GET",
@@ -95,7 +84,6 @@ export async function getMyUserOrganizations() {
     });
 
     if (!response.ok) throw new Error("Failed to fetch user organizations");
-
     return await response.json();
   } catch (error) {
     console.error("Error fetching user organizations:", error);
@@ -103,80 +91,50 @@ export async function getMyUserOrganizations() {
   }
 }
 
-export async function createUserOrganization(name: string) {
-  try {
-    const response = await fetch(`${BASE_URL}/user_organizations`, {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify({ name }),
-    });
+export async function createUserOrganization(name: string): Promise<any> {
+  const response = await fetch(`${BASE_URL}/user_organizations`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ name }),
+  });
 
-    if (!response.ok) throw new Error("Failed to create user organization");
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error creating user organization:", error);
-    throw error;
-  }
+  if (!response.ok) throw new Error("Failed to create user organization");
+  return await response.json();
 }
 
-export async function getUserOrganizationById(id: number) {
-  try {
-    const response = await fetch(`${BASE_URL}/user_organizations/${id}`, {
-      method: "GET",
-      headers: authHeaders(),
-    });
+export async function getUserOrganizationById(id: number): Promise<any | null> {
+  const response = await fetch(`${BASE_URL}/user_organizations/${id}`, {
+    method: "GET",
+    headers: authHeaders(),
+  });
 
-    if (!response.ok) throw new Error("Failed to fetch user organization");
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching user organization by ID:", error);
-    return null;
-  }
+  if (!response.ok) throw new Error("Failed to fetch user organization");
+  return await response.json();
 }
 
-export async function deleteUserOrganization(id: number) {
-  try {
-    const response = await fetch(`${BASE_URL}/user_organizations/${id}`, {
-      method: "DELETE",
-      headers: authHeaders(),
-    });
+export async function deleteUserOrganization(id: number): Promise<void> {
+  const response = await fetch(`${BASE_URL}/user_organizations/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
 
-    if (!response.ok) throw new Error("Failed to delete user organization");
-  } catch (error) {
-    console.error("Error deleting user organization:", error);
-    throw error;
-  }
+  if (!response.ok) throw new Error("Failed to delete user organization");
 }
 
-export async function getVoiceAgentsByOrg(organizationId: number) {
-  try {
-    const allAgents = await getVoiceAgents();
-    return allAgents.filter((agent: any) => agent.organization_id === organizationId);
-  } catch (error) {
-    console.error("Error filtering voice agents by org:", error);
-    return [];
+// ------------------ Agent Design APIs ------------------
+
+export async function getAgentDesigns(): Promise<any[]> {
+  const response = await fetch(`${BASE_URL}/agent-designs`, {
+    method: "GET",
+    headers: authHeaders(),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Failed to fetch agent designs: ${text}`);
   }
-}
 
-export async function getAgentDesigns() {
-  try {
-    const response = await fetch(`${BASE_URL}/agent-designs`, {
-      method: "GET",
-      headers: authHeaders(),
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Failed to fetch agent designs: ${text}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching agent designs:", error);
-    return [];
-  }
+  return await response.json();
 }
 
 export async function updateAgentDesign(agentDesignId: string, payload: {
@@ -184,7 +142,7 @@ export async function updateAgentDesign(agentDesignId: string, payload: {
   tone: string;
   voice: string;
   guidelines: string;
-}) {
+}): Promise<boolean> {
   const response = await fetch(`${BASE_URL}/agent-designs/${agentDesignId}`, {
     method: "PUT",
     headers: authHeaders(),
@@ -199,21 +157,97 @@ export async function updateAgentDesign(agentDesignId: string, payload: {
   return true;
 }
 
-export async function getAgentGuidelines(voiceAgentId: string) {
+export async function getAgentGuidelines(voiceAgentId: string): Promise<string | null> {
+  const response = await fetch(`${BASE_URL}/voice_agents/instructions/${voiceAgentId}`, {
+    method: "GET",
+    headers: authHeaders(),
+  });
+
+  if (!response.ok) throw new Error("Failed to fetch guidelines");
+
+  return await response.json();
+}
+
+// ------------------ Data Source APIs ------------------
+
+type CreateDataSourceParams = {
+  name?: string;
+  text?: string;
+  website?: string;
+  voice_agent_id: number;
+  file?: File | null;
+};
+
+export async function createDataSource(params: CreateDataSourceParams): Promise<any> {
+  const formData = new FormData();
+
+  if (params.name) formData.append("name", params.name);
+  if (params.text) formData.append("text", params.text);
+  if (params.website) formData.append("website", params.website);
+  formData.append("voice_agent_id", params.voice_agent_id.toString());
+  if (params.file) formData.append("file", params.file);
+
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(`${BASE_URL}/data_sources`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      // Do not manually set Content-Type when using FormData
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Failed to create data source: ${text}`);
+  }
+
+  return await response.json();
+}
+
+
+export async function getDataSources(): Promise<any[]> {
   try {
-    const response = await fetch(`${BASE_URL}/voice_agents/instructions/${voiceAgentId}`, {
+    const response = await fetch(`${BASE_URL}/data_sources`, {
       method: "GET",
       headers: authHeaders(),
     });
 
-    if (!response.ok) throw new Error("Failed to fetch guidelines");
-
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error(err);
-    return null;
+    if (!response.ok) throw new Error("Failed to fetch data sources");
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching data sources:", error);
+    return [];
   }
 }
 
+export async function updateDataSource(dataSourceId: number, data: { name: string; text: string }): Promise<boolean> {
+  const response = await fetch(`${BASE_URL}/data_sources/${dataSourceId}`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
 
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to update data source: ${errorText}`);
+  }
+
+  return true;
+}
+
+export async function deleteDataSource(dataSourceId: number): Promise<boolean> {
+  const response = await fetch(`${BASE_URL}/data_sources/${dataSourceId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to delete data source: ${errorText}`);
+  }
+
+  return true;
+}

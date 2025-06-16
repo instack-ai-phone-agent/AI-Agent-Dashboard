@@ -16,9 +16,11 @@ interface AgentGuidelinesPopupProps {
   value: string;
   onChange: (val: string) => void;
   onSave?: () => void; // optional save callback
+  updatedBy?: string; // optional updated by info
+  updatedAt?: string; // optional updated at info
 }
 
-export default function AgentGuidelinesPopup({ value, onChange, onSave }: AgentGuidelinesPopupProps) {
+export default function AgentGuidelinesPopup({ value, onChange, onSave, updatedBy, updatedAt, }: AgentGuidelinesPopupProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -32,11 +34,13 @@ export default function AgentGuidelinesPopup({ value, onChange, onSave }: AgentG
         <DialogHeader className="mb-2">
           <DialogTitle className="text-base font-semibold">Guidelines</DialogTitle>
           <div className="text-xs text-muted-foreground flex flex-col gap-1">
-            <span>You (editor)</span>
-            <span>Last updated at Jun 10, 2025, 11:20:09 AM</span>
+            <span>{updatedBy ?? "Unknown"} (editor)</span>
+            <span>Last updated at {updatedAt ? new Date(updatedAt).toLocaleString() : "unknown"}</span>
           </div>
         </DialogHeader>
         <textarea
+          name="guidelines"
+          id="guidelines"
           rows={12}
           className="w-full border border-gray-300 rounded-md p-3 text-sm font-mono resize-y bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           value={value}

@@ -30,6 +30,7 @@ import {
   createUserOrganization,
   getVoiceAgentsByOrg,
 } from "@/lib/api";
+import { useAgentContext } from "@/lib/AgentContext";
 
 interface Agent {
   id: string;
@@ -189,7 +190,7 @@ export default function AgentsSelection({ collapsed }: { collapsed: boolean }) {
 
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create New AI Agent</DialogTitle>
+            <DialogTitle>Create Your New AI Agent</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>

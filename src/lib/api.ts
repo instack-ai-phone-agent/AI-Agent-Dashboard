@@ -251,3 +251,36 @@ export async function deleteDataSource(dataSourceId: number): Promise<boolean> {
 
   return true;
 }
+
+export const getCallHistory = async (id: string) => {
+  const token = localStorage.getItem("access_token");
+  const res = await fetch(`https://test.aivocall.com/call_histories/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error("Failed to fetch call history");
+  return await res.json();
+};
+
+export async function getCallHistories() {
+  try {
+    const token = localStorage.getItem("access_token");
+    const res = await fetch(`${BASE_URL}/call_histories`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch call histories");
+
+    return await res.json();
+  } catch (err) {
+    console.error("Error fetching call histories:", err);
+    return [];
+  }
+}
+
+

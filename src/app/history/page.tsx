@@ -23,7 +23,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import CallDetailModal from "@/components/Call-Detail-Modal";
+import CallDetailModal from "@/components/call-detail-modal";
 
 export default function HistoryPage() {
   const [tab, setTab] = useState("calls");

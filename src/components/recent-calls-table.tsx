@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { DateRange } from "react-day-picker";
 import { Download, Eye, EyeOff } from "lucide-react";
+import { getCallHistories } from "@/lib/api";
 
 interface RecentCallsTableProps {
   agentId: string;
@@ -90,6 +91,34 @@ export default function RecentCallsTable({
 }: RecentCallsTableProps) {
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [calls, setCalls] = useState<Call[]>([]);
+
+  useEffect(() => {
+    const fetchCalls = async () => {
+      if (showMockData) {
+        setCalls(mockCalls);
+        return;
+      }
+      try {
+        const allCalls = await getCallHistories();
+        const mappedCalls: Call[] = allCalls.map((c: any) => ({
+          id: c.id.toString(),
+          name: c.name || "Unknown",
+          time: c.data_and_time,
+          phone: c.phone_number || "Unknown",
+          duration: c.duration || "-",
+          topic: c.topic || "-",
+          endedReason: c.ended_reason || "-",
+          outcome: c.outcome || "-",
+          agentId: c.voice_agent_id?.toString() || "",
+        }));
+        setCalls(mappedCalls);
+      } catch (err) {
+        console.error("Failed to fetch call histories:", err);
+      }
+    };
+    fetchCalls();
+  }, [agentId, dateRange, filters, showMockData]);
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
@@ -140,7 +169,7 @@ export default function RecentCallsTable({
     link.click();
   };
 
-  const filtered = mockCalls
+  const filtered = calls
     .filter((call) =>
       call.name.toLowerCase().includes(search.toLowerCase()) ||
       call.phone.includes(search)
@@ -196,7 +225,7 @@ export default function RecentCallsTable({
             <TableHead>
               <input
                 type="checkbox"
-                checked={selectedIds.length === filtered.length}
+                checked={selectedIds.length === filtered.length && filtered.length > 0}
                 onChange={selectAll}
               />
             </TableHead>
@@ -257,3 +286,4 @@ export default function RecentCallsTable({
     </div>
   );
 }
+

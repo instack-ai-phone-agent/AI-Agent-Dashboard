@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,6 +8,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Copy, X, ArrowLeft, ArrowRight } from "lucide-react";
+import { getCallHistory } from "@/lib/api"; // <-- Ensure this is implemented
 
 interface CallDetailModalProps {
   open: boolean;
@@ -15,6 +17,38 @@ interface CallDetailModalProps {
 }
 
 export default function CallDetailModal({ open, onClose, callId }: CallDetailModalProps) {
+  const [callData, setCallData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchCall = async () => {
+      if (!callId || !open) return;
+      setLoading(true);
+      try {
+        const data = await getCallHistory(callId);
+        setCallData(data);
+      } catch (err) {
+        console.error("Failed to fetch call data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCall();
+  }, [callId, open]);
+
+  if (!callData) return null;
+
+  const {
+    call_summary,
+    sentiment,
+    id,
+    phone_number,
+    highlights = [],
+    audio_path,
+  } = callData;
+
+  const audioUrl = audio_path ? `https://test.aivocall.com/static/audios/${audio_path}` : "";
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl p-6 overflow-y-auto max-h-[90vh]">
@@ -44,7 +78,7 @@ export default function CallDetailModal({ open, onClose, callId }: CallDetailMod
             <div className="mb-6">
               <h2 className="text-lg font-semibold mb-2">Call Summary</h2>
               <p className="text-sm text-muted-foreground">
-                Nikki Ramsey inquired about getting a virtual assistant to set up a lead capture form on her Linktree. She provided her name and phone number but declined to share her email, expressing concerns about data privacy.
+                {loading ? "Loading..." : call_summary || "No summary available"}
               </p>
             </div>
 
@@ -54,26 +88,31 @@ export default function CallDetailModal({ open, onClose, callId }: CallDetailMod
                 <div>
                   <p className="text-xs text-muted-foreground">Phone Number</p>
                   <p className="flex items-center gap-1">
-                    <span>anonymous</span>
+                    <span>{phone_number || "anonymous"}</span>
                     <Copy className="h-4 w-4 cursor-pointer" />
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Call ID</p>
                   <p className="flex items-center gap-1">
-                    <span>{callId}</span>
+                    <span>{id}</span>
                     <Copy className="h-4 w-4 cursor-pointer" />
                   </p>
                 </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Sentiment</p>
+                  <p>{sentiment || "N/A"}</p>
+                </div>
                 <div className="col-span-2">
-                  <p className="text-xs text-muted-foreground">Highlights</p>
+                  <p className="text-xs text-muted-foreground mb-1">Highlights</p>
                   <ul className="list-disc pl-5 space-y-1 text-sm">
-                    <li>Nikki wants VA for Linktree lead capture</li>
-                    <li>Provided name and phone number</li>
-                    <li>Reluctant to provide email</li>
-                    <li>Request for confirmation of help</li>
-                    <li>Wants lead form before link clicks</li>
-                    <li>Details will be passed to team</li>
+                    {highlights.length > 0 ? (
+                      highlights.map((h: any, idx: number) => (
+                        <li key={idx}>{h.name}</li>
+                      ))
+                    ) : (
+                      <li>No highlights available</li>
+                    )}
                   </ul>
                 </div>
               </div>
@@ -82,24 +121,26 @@ export default function CallDetailModal({ open, onClose, callId }: CallDetailMod
             <div className="mb-6">
               <h2 className="text-lg font-semibold mb-2">Call Flow</h2>
               <p className="text-sm text-muted-foreground">
-                Data capture workflow &rarr; Base Agent
+                Coming soon...
               </p>
             </div>
           </TabsContent>
 
           <TabsContent value="transcript">
             <div className="text-sm text-muted-foreground">
-              Transcript of the conversation goes here... (mock data)
+              Transcript of the conversation goes here... (placeholder)
             </div>
           </TabsContent>
         </Tabs>
 
-        <div className="mt-6">
-          <audio controls className="w-full">
-            <source src="/mock-call.mp3" type="audio/mpeg" />
-            Your browser does not support the audio element.
-          </audio>
-        </div>
+        {audio_path && (
+          <div className="mt-6">
+            <audio controls className="w-full">
+              <source src={audioUrl} type="audio/mpeg" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -10,8 +10,10 @@ import RecentChats from "@/components/recent-chats";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import type { DateRange } from "react-day-picker";
+import { redirect } from "next/navigation";
 
 export default function HomePage() {
+  redirect("/dashboard");
   const [selectedAgentId, setSelectedAgentId] = useState("all");
   const [timeframe, setTimeframe] = useState<"Daily" | "Weekly" | "Monthly">("Daily");
   const [dateRange, setDateRange] = useState<DateRange | undefined>({

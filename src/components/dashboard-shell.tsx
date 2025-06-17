@@ -44,7 +44,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   }, [pathname]);
 
   const analyticsNav = [
-    { label: "Dashboard", href: "/", icon: LayoutDashboard },
+    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   ];
 
   const setupNav = [

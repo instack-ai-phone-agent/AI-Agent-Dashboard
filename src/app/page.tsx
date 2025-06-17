@@ -66,7 +66,9 @@ export default function HomePage() {
       />
 
       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
-        <RecentCallsTable agentId={selectedAgentId} />
+        <RecentCallsTable agentId={selectedAgentId} onRowClick={function (callId: string): void {
+          throw new Error("Function not implemented.");
+        } } />
         <RecentChats agentId={selectedAgentId} />
       </div>
     </DashboardShell>

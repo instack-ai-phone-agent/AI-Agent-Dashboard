@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardShell from "@/components/dashboard-shell";
-import RecentCallsTable from "@/components/recent-calls-table";
 import RecentChats from "@/components/recent-chats";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
-import { RefreshCw, Check, X } from "lucide-react";
+import { RefreshCw, Check, X, Download, EyeOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { DateRange } from "react-day-picker";
@@ -24,6 +23,27 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import CallDetailModal from "@/components/call-detail-modal";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { getCallHistories, deleteCallHistory } from "@/lib/api";
+
+interface Call {
+  id: string;
+  name: string;
+  time: string;
+  phone: string;
+  duration: string;
+  topic: string;
+  endedReason: string;
+  outcome: string;
+  agentId: string;
+}
 
 export default function HistoryPage() {
   const [tab, setTab] = useState("calls");
@@ -34,8 +54,33 @@ export default function HistoryPage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
-
+  const [calls, setCalls] = useState<Call[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
   const agentId = "sidebar-selected-agent";
+
+  useEffect(() => {
+    const fetchCalls = async () => {
+      try {
+        const allCalls = await getCallHistories();
+        const mappedCalls: Call[] = allCalls.map((c: any) => ({
+          id: c.id.toString(),
+          name: c.name || "Unknown",
+          time: c.data_and_time,
+          phone: c.phone_number || "Unknown",
+          duration: c.duration || "-",
+          topic: c.topic || "-",
+          endedReason: c.ended_reason || "-",
+          outcome: c.outcome || "-",
+          agentId: c.voice_agent_id?.toString() || "",
+        }));
+        setCalls(mappedCalls);
+      } catch (err) {
+        console.error("Failed to fetch call histories:", err);
+      }
+    };
+    fetchCalls();
+  }, [dateRange, filtersOpen, selectedFilters]);
 
   const toggleFilter = (filter: string) => {
     setSelectedFilters((prev) =>
@@ -46,6 +91,85 @@ export default function HistoryPage() {
   };
 
   const clearFilters = () => setSelectedFilters([]);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const selectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(filtered.map((c) => c.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const exportSelected = () => {
+    const data = filtered.filter((c) => selectedIds.includes(c.id));
+    const csv = [
+      [
+        "Date",
+        "Time",
+        "Phone",
+        "Duration",
+        "Topic",
+        "Ended Reason",
+        "Outcome",
+      ],
+      ...data.map((call) => [
+        new Date(call.time).toLocaleDateString("en-AU"),
+        new Date(call.time).toLocaleTimeString("en-AU", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        call.phone,
+        call.duration,
+        call.topic,
+        call.endedReason,
+        call.outcome,
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "calls_export.csv";
+    link.click();
+  };
+
+  const deleteSelected = async () => {
+    for (const id of selectedIds) {
+      await deleteCallHistory(Number(id));
+    }
+    setCalls((prev) => prev.filter((c) => !selectedIds.includes(c.id)));
+    setSelectedIds([]);
+  };
+
+  const filtered = calls
+    .filter((call) =>
+      call.name.toLowerCase().includes(search.toLowerCase()) ||
+      call.phone.includes(search)
+    )
+    .filter((call) => !agentId || call.agentId === agentId)
+    .filter((call) => {
+      if (!dateRange?.from || !dateRange?.to) return true;
+      const callDate = new Date(call.time);
+      return callDate >= dateRange.from && callDate <= dateRange.to;
+    })
+    .filter((call) => {
+      if (!selectedFilters?.length) return true;
+      return selectedFilters.some((f) => {
+        const val = f.toLowerCase();
+        return (
+          call.endedReason.toLowerCase().includes(val) ||
+          call.outcome.toLowerCase().includes(val)
+        );
+      });
+    });
 
   const renderCommandItem = (label: string, value: string, count?: number) => (
     <CommandItem
@@ -130,15 +254,15 @@ export default function HistoryPage() {
 
               <Input
                 placeholder="Search phone number ..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 className="h-9 w-full sm:w-[200px] text-sm"
               />
 
               <Button
                 variant="outline"
                 className="h-9 px-3 text-sm font-normal"
-                onClick={() => {
-                  // trigger refresh logic here
-                }}
+                onClick={() => window.location.reload()}
               >
                 <RefreshCw className="w-4 h-4" />
               </Button>
@@ -165,14 +289,102 @@ export default function HistoryPage() {
         </div>
 
         {tab === "calls" && (
-          <RecentCallsTable
-            agentId={agentId}
-            dateRange={dateRange}
-            filters={selectedFilters}
-            showMockData={true}
-            onRowClick={(callId: string) => setSelectedCallId(callId)}
-          />
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={selectedIds.length === 0}
+                  onClick={exportSelected}
+                >
+                  <Download className="h-4 w-4 mr-2" /> Export
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={selectedIds.length === 0}
+                  onClick={() => setSelectedIds([])}
+                >
+                  <EyeOff className="h-4 w-4 mr-2" /> Mark as Read
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={selectedIds.length === 0}
+                  onClick={deleteSelected}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" /> Delete
+                </Button>
+              </div>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.length === filtered.length && filtered.length > 0}
+                      onChange={selectAll}
+                    />
+                  </TableHead>
+                  <TableHead>Date & Time</TableHead>
+                  <TableHead>Phone Number</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Topic</TableHead>
+                  <TableHead>Ended Reason</TableHead>
+                  <TableHead>Outcome</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((call) => (
+                  <TableRow
+                    key={call.id}
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => setSelectedCallId(call.id)}
+                  >
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(call.id)}
+                        onChange={() => toggleSelect(call.id)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm font-medium">
+                        {new Date(call.time).toLocaleDateString("en-AU", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(call.time).toLocaleTimeString("en-AU", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                    </TableCell>
+                    <TableCell>{call.phone}</TableCell>
+                    <TableCell>{call.duration}</TableCell>
+                    <TableCell>{call.topic}</TableCell>
+                    <TableCell>{call.endedReason}</TableCell>
+                    <TableCell>{call.outcome}</TableCell>
+                  </TableRow>
+                ))}
+                {filtered.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-sm text-muted-foreground">
+                      No matching calls found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         )}
+
         {tab === "chats" && <RecentChats agentId={agentId} />}
 
         <CallDetailModal

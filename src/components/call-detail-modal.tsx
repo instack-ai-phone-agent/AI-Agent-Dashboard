@@ -8,7 +8,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Copy, X, ArrowLeft, ArrowRight } from "lucide-react";
-import { getCallHistory } from "@/lib/api"; // <-- Ensure this is implemented
+import { getCallHistory } from "@/lib/api";
 
 interface CallDetailModalProps {
   open: boolean;
@@ -120,9 +120,7 @@ export default function CallDetailModal({ open, onClose, callId }: CallDetailMod
 
             <div className="mb-6">
               <h2 className="text-lg font-semibold mb-2">Call Flow</h2>
-              <p className="text-sm text-muted-foreground">
-                Coming soon...
-              </p>
+              <p className="text-sm text-muted-foreground">Coming soon...</p>
             </div>
           </TabsContent>
 

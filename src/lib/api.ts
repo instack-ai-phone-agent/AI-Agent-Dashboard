@@ -252,6 +252,30 @@ export async function deleteDataSource(dataSourceId: number): Promise<boolean> {
   return true;
 }
 
+// ------------------ Call History APIs ------------------
+export async function createCallHistory(payload: {
+  voice_agent_id: number;
+  data_and_time: string;
+  duration: string;
+  topic: string;
+  sentiment: string;
+  ended_reason: string;
+  outcome: string;
+  call_summary: string;
+}) {
+  const token = localStorage.getItem("access_token");
+  const res = await fetch(`${BASE_URL}/call_histories`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Failed to create call history");
+  return await res.json();
+}
+
 export const getCallHistory = async (id: string) => {
   const token = localStorage.getItem("access_token");
   const res = await fetch(`https://test.aivocall.com/call_histories/${id}`, {
@@ -283,4 +307,13 @@ export async function getCallHistories() {
   }
 }
 
-
+export async function deleteCallHistory(callId: string | number) {
+  const token = localStorage.getItem("access_token");
+  const res = await fetch(`${BASE_URL}/call_histories/${callId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error("Failed to delete call history");
+}

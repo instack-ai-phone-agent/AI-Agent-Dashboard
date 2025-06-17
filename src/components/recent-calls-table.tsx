@@ -12,8 +12,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { DateRange } from "react-day-picker";
-import { Download, Eye, EyeOff } from "lucide-react";
-import { getCallHistories } from "@/lib/api";
+import { Download, Eye, EyeOff, Trash } from "lucide-react";
+import { getCallHistories, deleteCallHistory } from "@/lib/api";
 
 interface RecentCallsTableProps {
   agentId: string;
@@ -21,6 +21,7 @@ interface RecentCallsTableProps {
   filters?: string[];
   showMockData?: boolean;
   onRowClick: (callId: string) => void;
+  onRefresh?: () => void;
 }
 
 interface Call {
@@ -88,37 +89,41 @@ export default function RecentCallsTable({
   filters,
   showMockData,
   onRowClick,
+  onRefresh,
 }: RecentCallsTableProps) {
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [calls, setCalls] = useState<Call[]>([]);
 
   useEffect(() => {
-    const fetchCalls = async () => {
-      if (showMockData) {
-        setCalls(mockCalls);
-        return;
-      }
-      try {
-        const allCalls = await getCallHistories();
-        const mappedCalls: Call[] = allCalls.map((c: any) => ({
-          id: c.id.toString(),
-          name: c.name || "Unknown",
-          time: c.data_and_time,
-          phone: c.phone_number || "Unknown",
-          duration: c.duration || "-",
-          topic: c.topic || "-",
-          endedReason: c.ended_reason || "-",
-          outcome: c.outcome || "-",
-          agentId: c.voice_agent_id?.toString() || "",
-        }));
-        setCalls(mappedCalls);
-      } catch (err) {
-        console.error("Failed to fetch call histories:", err);
-      }
-    };
-    fetchCalls();
-  }, [agentId, dateRange, filters, showMockData]);
+  const fetchCalls = async () => {
+    if (showMockData) {
+      setCalls(mockCalls);
+      return;
+    }
+
+    try {
+      const allCalls = await getCallHistories();
+      const mappedCalls = allCalls.map((c: any) => ({
+        id: c.id.toString(),
+        name: c.name || "Unknown",
+        time: c.data_and_time,
+        phone: c.phone_number || "Unknown",
+        duration: c.duration || "-",
+        topic: c.topic || "-",
+        endedReason: c.ended_reason || "-",
+        outcome: c.outcome || "-",
+        agentId: c.voice_agent_id?.toString() || "",
+      }));
+      setCalls(mappedCalls);
+    } catch (err) {
+      console.error("Failed to fetch call histories:", err);
+    }
+  };
+
+  fetchCalls();
+}, [agentId, dateRange, filters, showMockData]);
+
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
@@ -169,27 +174,37 @@ export default function RecentCallsTable({
     link.click();
   };
 
+  const deleteSelected = async () => {
+    try {
+      await Promise.all(selectedIds.map(id => deleteCallHistory(parseInt(id))));
+      setCalls(calls.filter(call => !selectedIds.includes(call.id)));
+      setSelectedIds([]);
+    } catch (err) {
+      console.error("Failed to delete selected call histories", err);
+    }
+  };
+
   const filtered = calls
-    .filter((call) =>
-      call.name.toLowerCase().includes(search.toLowerCase()) ||
-      call.phone.includes(search)
-    )
-    .filter((call) => !agentId || call.agentId === agentId)
-    .filter((call) => {
-      if (!dateRange?.from || !dateRange?.to) return true;
-      const callDate = new Date(call.time);
-      return callDate >= dateRange.from && callDate <= dateRange.to;
-    })
-    .filter((call) => {
-      if (!filters?.length) return true;
-      return filters.some((f) => {
-        const val = f.toLowerCase();
-        return (
-          call.endedReason.toLowerCase().includes(val) ||
-          call.outcome.toLowerCase().includes(val)
-        );
-      });
+  .filter((call) =>
+    call.name.toLowerCase().includes(search.toLowerCase()) ||
+    call.phone.includes(search)
+  )
+  .filter((call) => !agentId || call.agentId === agentId)
+  .filter((call) => {
+    if (!dateRange?.from || !dateRange?.to) return true;
+    const callDate = new Date(call.time);
+    return callDate >= dateRange.from && callDate <= dateRange.to;
+  })
+  .filter((call) => {
+    if (!filters?.length) return true;
+    return filters.some((f) => {
+      const val = f.toLowerCase();
+      return (
+        call.endedReason.toLowerCase().includes(val) ||
+        call.outcome.toLowerCase().includes(val)
+      );
     });
+  });
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
@@ -210,6 +225,14 @@ export default function RecentCallsTable({
             onClick={() => setSelectedIds([])}
           >
             <EyeOff className="h-4 w-4 mr-2" /> Mark as Read
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            disabled={selectedIds.length === 0}
+            onClick={deleteSelected}
+          >
+            <Trash className="h-4 w-4 mr-2" /> Delete
           </Button>
         </div>
         <Input
@@ -286,4 +309,3 @@ export default function RecentCallsTable({
     </div>
   );
 }
-

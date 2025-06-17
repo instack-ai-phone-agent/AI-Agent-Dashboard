@@ -12,6 +12,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
+    "types": [],
     "incremental": true,
     "plugins": [
       {
@@ -23,5 +24,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules/react-day-picker", "node_modules/react-day-picker/dist", "node_modules/react-day-picker/typings", "node_modules/react-day-picker/src", "node_modules/react-day-picker/test"]
 }

@@ -293,7 +293,7 @@ export async function getCallHistories() {
     const res = await fetch(`${BASE_URL}/call_histories`, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${token}`,
+        "Authorization": `Bearer ${localStorage.getItem("access_token") || ""}`,
         Accept: "application/json",
       },
     });

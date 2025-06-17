@@ -40,6 +40,7 @@ interface Call {
   phone: string;
   duration: string;
   topic: string;
+  sentiment: string;
   endedReason: string;
   outcome: string;
   agentId: string;
@@ -57,6 +58,8 @@ export default function HistoryPage() {
   const [calls, setCalls] = useState<Call[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 10;
   const agentId = "sidebar-selected-agent";
 
   useEffect(() => {
@@ -70,6 +73,7 @@ export default function HistoryPage() {
           phone: c.phone_number || "Unknown",
           duration: c.duration || "-",
           topic: c.topic || "-",
+          sentiment: c.sentiment || "-",
           endedReason: c.ended_reason || "-",
           outcome: c.outcome || "-",
           agentId: c.voice_agent_id?.toString() || "",
@@ -80,7 +84,7 @@ export default function HistoryPage() {
       }
     };
     fetchCalls();
-  }, [dateRange, filtersOpen, selectedFilters]);
+  }, [dateRange, filtersOpen, selectedFilters, search]);
 
   const toggleFilter = (filter: string) => {
     setSelectedFilters((prev) =>
@@ -88,10 +92,11 @@ export default function HistoryPage() {
         ? prev.filter((item) => item !== filter)
         : [...prev, filter]
     );
+    setPage(1);
   };
 
   const clearFilters = () => setSelectedFilters([]);
-
+  
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
@@ -99,12 +104,12 @@ export default function HistoryPage() {
   };
 
   const selectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      setSelectedIds(filtered.map((c) => c.id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
+  if (e.target.checked) {
+    setSelectedIds((prev) => [...new Set([...prev, ...paginated.map(c => c.id)])]);
+  } else {
+    setSelectedIds((prev) => prev.filter(id => !paginated.map(c => c.id).includes(id)));
+  }
+};
 
   const exportSelected = () => {
     const data = filtered.filter((c) => selectedIds.includes(c.id));
@@ -171,6 +176,8 @@ export default function HistoryPage() {
       });
     });
 
+  const paginated = filtered.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+  const totalPages = Math.ceil(filtered.length / rowsPerPage);  
   const renderCommandItem = (label: string, value: string, count?: number) => (
     <CommandItem
       key={value}
@@ -308,13 +315,8 @@ export default function HistoryPage() {
                 >
                   <EyeOff className="h-4 w-4 mr-2" /> Mark as Read
                 </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  disabled={selectedIds.length === 0}
-                  onClick={deleteSelected}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" /> Delete
+                <Button variant="outline" size="sm" disabled={selectedIds.length === 0} onClick={deleteSelected}>
+                  <Trash2 className="w-4 h-4 mr-2" /> Delete
                 </Button>
               </div>
             </div>
@@ -324,7 +326,7 @@ export default function HistoryPage() {
                   <TableHead>
                     <input
                       type="checkbox"
-                      checked={selectedIds.length === filtered.length && filtered.length > 0}
+                      checked={paginated.every(call => selectedIds.includes(call.id)) && paginated.length > 0}
                       onChange={selectAll}
                     />
                   </TableHead>
@@ -332,12 +334,13 @@ export default function HistoryPage() {
                   <TableHead>Phone Number</TableHead>
                   <TableHead>Duration</TableHead>
                   <TableHead>Topic</TableHead>
+                  <TableHead>Sentiment</TableHead>
                   <TableHead>Ended Reason</TableHead>
                   <TableHead>Outcome</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((call) => (
+                {paginated.map((call) => (
                   <TableRow
                     key={call.id}
                     className="cursor-pointer hover:bg-gray-50"
@@ -369,6 +372,7 @@ export default function HistoryPage() {
                     <TableCell>{call.phone}</TableCell>
                     <TableCell>{call.duration}</TableCell>
                     <TableCell>{call.topic}</TableCell>
+                    <TableCell>{call.sentiment}</TableCell>
                     <TableCell>{call.endedReason}</TableCell>
                     <TableCell>{call.outcome}</TableCell>
                   </TableRow>
@@ -382,6 +386,30 @@ export default function HistoryPage() {
                 )}
               </TableBody>
             </Table>
+            <div className="flex justify-between items-center mt-4">
+  <span className="text-sm text-muted-foreground">
+    Page {page} of {totalPages}
+  </span>
+  <div className="space-x-2">
+    <Button
+      variant="outline"
+      size="sm"
+      disabled={page === 1}
+      onClick={() => setPage((prev) => prev - 1)}
+    >
+      Previous
+    </Button>
+    <Button
+      variant="outline"
+      size="sm"
+      disabled={page === totalPages}
+      onClick={() => setPage((prev) => prev + 1)}
+    >
+      Next
+    </Button>
+  </div>
+</div>
+
           </div>
         )}
 

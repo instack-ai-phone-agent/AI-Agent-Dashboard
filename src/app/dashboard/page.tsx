@@ -12,8 +12,7 @@ import { Calendar } from "@/components/ui/calendar";
 import type { DateRange } from "react-day-picker";
 import { redirect } from "next/navigation";
 
-export default function HomePage() {
-  redirect("/dashboard");
+export default function DashboardPage() {
   const [selectedAgentId, setSelectedAgentId] = useState("all");
   const [timeframe, setTimeframe] = useState<"Daily" | "Weekly" | "Monthly">("Daily");
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
